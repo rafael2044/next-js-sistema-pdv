@@ -1,12 +1,12 @@
 # 🛒 Sistema PDV - Frontend
 
-Interface web moderna para sistema de Ponto de Venda, desenvolvida com Next.js 14+ (App Router), TypeScript e Tailwind CSS.
+Interface web moderna para sistema de Ponto de Venda, desenvolvida com **Next.js 14+** (App Router), **TypeScript** e **Tailwind CSS**.
 
 # 📋 Pré-requisitos
 
 Antes de começar, certifique-se de ter instalado em sua máquina:
 
-- Node.js (Versão 18 ou superior recomendada)
+- **Node.js** (Versão 18 ou superior recomendada)
 
 - Gerenciador de pacotes `npm` (geralmente vem com o Node) ou `yarn`.
 
@@ -18,7 +18,7 @@ Siga os passos abaixo para configurar o projeto localmente.
 
 Abra o terminal na pasta `frontend` e execute:
 
-    bash npm install
+    npm install
     #ou
     yarn install
 
@@ -29,8 +29,8 @@ O Next.js precisa saber onde está rodando sua API (Backend).
 
 Crie uma cópia do arquivo de exemplo:
 
-    cp .env.local.example .env.local
-    # No Windows (PowerShell): copy .env.local.example .env.local
+    copy .env.local.example .env.local
+    # No Linux: cp .env.local.example .env.local 
 
 
 Abra o arquivo .env.local criado e verifique se a URL aponta para o seu Backend FastAPI:
@@ -94,4 +94,4 @@ Erro de Conexão (Network Error):
 
 Erro de CORS:
 
-Verifique no arquivo `main.py` do Backend se `http://localhost:3000` está na lista de origins.
+Verifique no arquivo `.env` do Backend se `http://localhost:3000` está na variável de ambiente URL_FRONTEND.
