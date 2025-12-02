@@ -1,97 +1,33 @@
-"use client";
-import { useEffect, useState } from "react";
+
 import api from "@/services/api";
-import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import {
     ArrowLeft,
-    Search,
     Plus,
-    Edit2,
-    Trash2,
     Package,
-    Eye,
-    EyeOff
 } from "lucide-react";
-import { toast } from "sonner";
+import ProductActions from "@/components/ProductActions";
+import { cookies } from "next/headers";
+import { Product } from "@/types";
 
-interface Product {
-    id: number;
-    name: string;
-    barcode: string | null;
-    price: number;
-    stock_quantity: number;
-    min_stock: number;
-    category: string | null;
-    is_active: boolean;
-}
 
-export default function ProductList() {
-    const { role } = useAuth();
-    const [products, setProducts] = useState<Product[]>([]);
-    const [search, setSearch] = useState("");
-    const [loading, setLoading] = useState(true);
+export default async function ProductList() {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("token")?.value;
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    // Permissão: Apenas Admin e Manager podem editar/excluir
-    const canManage = role === "admin" || role === "manager";
+    const resp = await api.get("/products/", { headers: { Authorization: `Bearer ${token}` } });
+    const products = resp.data;
 
-    useEffect(() => {
-        fetchProducts();
-    }, []);
+    // const [search, setSearch] = useState("");
 
-    const fetchProducts = async () => {
-        try {
-            const res = await api.get("/products/");
-            setProducts(res.data);
-        } catch (error) {
-            toast.error("Erro ao carregar produtos");
-        } finally {
-            setLoading(false);
-        }
-    };
 
-    const handleDelete = async (id: number, name: string) => {
-        if (!confirm(`Tem certeza que deseja excluir o produto "${name}"?`)) return;
 
-        try {
-            await api.delete(`/products/${id}`);
-            toast.success("Produto excluído com sucesso!");
-            // Remove da lista localmente para não precisar recarregar tudo
-            setProducts((prev) => prev.filter((p) => p.id !== id));
-        } catch (error: any) {
-            const msg = error.response?.data?.detail || "Erro ao excluir produto";
-            toast.error(msg);
-        }
-    };
-
-    const toggleStatus = async (product: Product) => {
-        try {
-            const newStatus = !product.is_active;
-
-            const payload = {
-                ...product,
-                is_active: newStatus
-            };
-
-            await api.put(`/products/${product.id}`, payload);
-
-            toast.success(`Produto ${newStatus ? 'Ativado' : 'Desativado'}!`);
-
-            // Atualiza lista local
-            setProducts(prev => prev.map(p =>
-                p.id === product.id ? { ...p, is_active: newStatus } : p
-            ));
-
-        } catch (error) {
-            toast.error("Erro ao alterar status");
-        }
-    };
-
-    // Filtro de busca
-    const filteredProducts = products.filter((p) =>
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        (p.barcode && p.barcode.includes(search))
-    );
+    // // Filtro de busca
+    // const filteredProducts = products.filter((p) =>
+    //     p.name.toLowerCase().includes(search.toLowerCase()) ||
+    //     (p.barcode && p.barcode.includes(search))
+    // );
 
     return (
         <div className="min-h-screen bg-gray-100 p-6">
@@ -111,18 +47,16 @@ export default function ProductList() {
                         </div>
                     </div>
 
-                    {canManage && (
-                        <Link
-                            href="/products/create"
-                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 shadow-sm transition"
-                        >
-                            <Plus size={20} /> Novo Produto
-                        </Link>
-                    )}
+                    <Link
+                        href="/products/create"
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 shadow-sm transition"
+                    >
+                        <Plus size={20} /> Novo Produto
+                    </Link>
                 </div>
 
                 {/* Barra de Ferramentas (Busca) */}
-                <div className="bg-white p-4 rounded-t-lg border-b border-gray-200 flex items-center gap-2">
+                {/* <div className="bg-white p-4 rounded-t-lg border-b border-gray-200 flex items-center gap-2">
                     <Search className="text-gray-400" size={20} />
                     <input
                         type="text"
@@ -131,7 +65,7 @@ export default function ProductList() {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
-                </div>
+                </div> */}
 
                 {/* Tabela */}
                 <div className="bg-white shadow-sm rounded-b-lg overflow-hidden">
@@ -145,16 +79,14 @@ export default function ProductList() {
                                 <th className="p-4 border-b">Estoque</th>
                                 <th className="p-4 border-b">Estoque Mínimo</th>
                                 <th className="p-4 border-b">Status</th>
-                                {canManage && <th className="p-4 border-b text-center">Ações</th>}
+                                <th className="p-4 border-b text-center">Ações</th>
                             </tr>
                         </thead>
                         <tbody className="text-sm text-gray-700 divide-y divide-gray-100">
-                            {loading ? (
-                                <tr><td colSpan={6} className="p-8 text-center text-gray-500">Carregando...</td></tr>
-                            ) : filteredProducts.length === 0 ? (
+                            {products.length === 0 ? (
                                 <tr><td colSpan={6} className="p-8 text-center text-gray-500">Nenhum produto encontrado.</td></tr>
                             ) : (
-                                filteredProducts.map((product) => (
+                                products.map((product: Product) => (
                                     <tr key={product.id} className="hover:bg-gray-50 transition">
                                         <td className="p-4 text-gray-500">#{product.id}</td>
                                         <td className="p-4 font-medium text-gray-800">
@@ -182,31 +114,9 @@ export default function ProductList() {
                                                 {product.is_active ? 'Ativo' : 'Inativo'}
                                             </span>
                                         </td>
-                                        {canManage && (
-                                            <td className="p-4 flex justify-center gap-2">
-                                                <button
-                                                    onClick={() => toggleStatus(product)}
-                                                    className={`p-2 rounded transition ${product.is_active ? 'text-gray-400 hover:text-gray-600' : 'text-gray-400 hover:text-green-600'}`}
-                                                    title={product.is_active ? "Desativar Produto" : "Ativar Produto"}
-                                                >
-                                                    {product.is_active ? <Eye size={18} /> : <EyeOff size={18} />}
-                                                </button>
-                                                <Link
-                                                    href={`/products/edit/${product.id}`}
-                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded transition"
-                                                    title="Editar"
-                                                >
-                                                    <Edit2 size={18} />
-                                                </Link>
-                                                <button
-                                                    onClick={() => handleDelete(product.id, product.name)}
-                                                    className="p-2 text-red-500 hover:bg-red-50 rounded transition"
-                                                    title="Excluir"
-                                                >
-                                                    <Trash2 size={18} />
-                                                </button>
-                                            </td>
-                                        )}
+                                        <td className="p-4 flex justify-center gap-2">
+                                            <ProductActions product={product} />
+                                        </td>
                                     </tr>
                                 ))
                             )}

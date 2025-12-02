@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Monitor, Save } from "lucide-react";
+import Cookies from 'js-cookie';
 
 export default function TerminalSetup() {
     const [isOpen, setIsOpen] = useState(false);
@@ -8,7 +9,7 @@ export default function TerminalSetup() {
 
     useEffect(() => {
         // Verifica se já existe configuração
-        const stored = localStorage.getItem("terminal_id");
+        const stored = Cookies.get("terminal_id");
         if (!stored) {
             setIsOpen(true);
             // Sugere um nome aleatório ou padrão
@@ -19,7 +20,7 @@ export default function TerminalSetup() {
     const handleSave = () => {
         if (!terminalName.trim()) return;
 
-        localStorage.setItem("terminal_id", terminalName.toUpperCase());
+        Cookies.set("terminal_id", terminalName.toUpperCase());
         setIsOpen(false);
         window.location.reload(); // Recarrega para aplicar o header no Axios e Contextos
     };

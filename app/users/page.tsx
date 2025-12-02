@@ -1,71 +1,28 @@
-"use client";
-import { useEffect, useState } from "react";
 import api from "@/services/api";
-import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
-import { ArrowLeft, Search, Plus, Edit2, Trash2, UserCog, UserX, UserCheck } from "lucide-react";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { ArrowLeft, Plus, UserCog } from "lucide-react";
+import UserActions from "@/components/UserActions";
+import { cookies } from "next/headers"; // Importação nativa do Next
+import { UserData } from "@/types";
 
-interface UserData {
-    id: number;
-    name: string;
-    username: string;
-    role: string;
-    is_active: boolean;
-}
+export default async function UserList() {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("token")?.value;
+    const terminal_id = cookieStore.get("terminal_id")?.value;
 
-export default function UserList() {
-    const { role, user: currentUser } = useAuth();
-    const router = useRouter();
-    const [users, setUsers] = useState<UserData[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        // Proteção básica
-        if (role !== "admin" && role !== "manager") {
-            router.push("/");
-            return;
-        }
-        fetchUsers();
-    }, [role]);
-
-    const fetchUsers = async () => {
-        try {
-            const res = await api.get("/users/");
-            setUsers(res.data);
-        } catch (error) {
-            toast.error("Erro ao carregar usuários");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const toggleStatus = async (user: UserData) => {
-        if (user.username === currentUser) {
-            toast.error("Você não pode inativar a si mesmo!");
-            return;
-        }
-        try {
-            await api.put(`/users/${user.id}`, { is_active: !user.is_active });
-            toast.success(`Usuário ${!user.is_active ? 'Ativado' : 'Inativado'}!`);
-            setUsers(prev => prev.map(u => u.id === user.id ? { ...u, is_active: !u.is_active } : u));
-        } catch (error: any) {
-            toast.error("Erro ao alterar status");
-        }
-    };
-
-    const handleDelete = async (id: number) => {
-        if (!confirm("Tem certeza que deseja excluir este usuário permanentemente?")) return;
-        try {
-            await api.delete(`/users/${id}`);
-            toast.success("Usuário excluído!");
-            setUsers(prev => prev.filter(u => u.id !== id));
-        } catch (error: any) {
-            const msg = error.response?.data?.detail || "Erro ao excluir";
-            toast.error(msg);
-        }
-    };
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    let res = null;
+    try {
+        res = await api.get("/users/", {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "x-terminal-id": terminal_id,
+            },
+        });
+    } catch (error: any) {
+        throw Error(error.response?.data?.detail || "Erro ao buscar lista de usuários");
+    }
+    const users = res?.data;
 
     return (
         <div className="min-h-screen bg-gray-100 p-6">
@@ -96,16 +53,25 @@ export default function UserList() {
                             </tr>
                         </thead>
                         <tbody className="text-sm text-gray-700 divide-y divide-gray-100">
-                            {users.map((u) => (
+                            {users.length === 0 && (
+                                <tr>
+                                    <td colSpan={5} className="p-4">
+                                        <div className="flex items-center justify-center">
+                                            <span className="font-semibold">Nenhum usuário encontrado</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
+                            {users.map((u: UserData) => (
                                 <tr key={u.id} className="hover:bg-gray-50 transition">
                                     <td className="p-4 font-medium">{u.name}</td>
                                     <td className="p-4 text-gray-500">{u.username}</td>
                                     <td className="p-4">
                                         <span className={`px-2 py-1 rounded text-xs border ${u.role === 'admin' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                                                u.role === 'manager' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                                    'bg-gray-50 text-gray-600 border-gray-200'
+                                            u.role === 'manager' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                                'bg-gray-50 text-gray-600 border-gray-200'
                                             }`}>
-                                            {u.role.toUpperCase()}
+                                            {u.role === 'admin' ? 'Administrador' : u.role === 'manager' ? 'Gerente' : 'Vendedor'}
                                         </span>
                                     </td>
                                     <td className="p-4">
@@ -114,21 +80,7 @@ export default function UserList() {
                                         </span>
                                     </td>
                                     <td className="p-4 flex justify-center gap-2">
-                                        <button
-                                            onClick={() => toggleStatus(u)}
-                                            title={u.is_active ? "Inativar" : "Ativar"}
-                                            className={`p-2 rounded transition ${u.is_active ? 'text-gray-400 hover:text-red-600' : 'text-gray-400 hover:text-green-600'}`}
-                                        >
-                                            {u.is_active ? <UserX size={18} /> : <UserCheck size={18} />}
-                                        </button>
-
-                                        <Link href={`/users/edit/${u.id}`} className="p-2 text-blue-600 hover:bg-blue-50 rounded">
-                                            <Edit2 size={18} />
-                                        </Link>
-
-                                        <button onClick={() => handleDelete(u.id)} className="p-2 text-red-500 hover:bg-red-50 rounded">
-                                            <Trash2 size={18} />
-                                        </button>
+                                        <UserActions user={u} />
                                     </td>
                                 </tr>
                             ))}

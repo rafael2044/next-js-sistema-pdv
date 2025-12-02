@@ -1,6 +1,7 @@
 "use client";
 import React, { createContext, useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
+import Cookies from 'js-cookie';
 
 interface AuthContextType {
   user: string | null;
@@ -23,7 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Recupera dados ao iniciar
     const recoverUser = () => {
       if (typeof window !== "undefined") {
-        const token = localStorage.getItem("token");
+        const token = Cookies.get("token");
         const savedUser = localStorage.getItem("user");
         const savedRole = localStorage.getItem("role"); // <--- NOVO
 
@@ -39,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = (token: string, username: string, role: string) => {
-    localStorage.setItem("token", token);
+    Cookies.set('token', token, { expires: 7 });
     localStorage.setItem("user", username);
     localStorage.setItem("role", role); // <--- NOVO
     setUser(username);
@@ -48,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
+    Cookies.remove('token');
     localStorage.removeItem("user");
     localStorage.removeItem("role"); // <--- NOVO
     setUser(null);
