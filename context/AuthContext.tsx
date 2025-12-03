@@ -1,6 +1,7 @@
 "use client";
 import React, { createContext, useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 
 interface AuthContextType {
   user: string | null;
@@ -22,16 +23,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Recupera dados ao iniciar
     const recoverUser = () => {
-      if (typeof window !== "undefined") {
-        const token = localStorage.getItem("token");
-        const savedUser = localStorage.getItem("user");
-        const savedRole = localStorage.getItem("role"); // <--- NOVO
 
-        if (token && savedUser) {
-          setUser(savedUser);
-          setRole(savedRole); // <--- NOVO
-        }
+      const token = Cookies.get("token");
+      const savedUser = Cookies.get("user");
+      const savedRole = Cookies.get("role"); // <--- NOVO
+
+      if (token && savedUser) {
+        setUser(savedUser);
+        setRole(savedRole || null); // <--- NOVO
       }
+
       setLoading(false); // <--- Terminou de verificar
     };
 
@@ -39,18 +40,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = (token: string, username: string, role: string) => {
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", username);
-    localStorage.setItem("role", role); // <--- NOVO
+    Cookies.set("token", token);
+    Cookies.set("user", username);
+    Cookies.set("role", role); // <--- NOVO
     setUser(username);
-    setRole(role); // <--- NOVO
+    setRole(role || null); // <--- NOVO
     router.push("/")
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("role"); // <--- NOVO
+    Cookies.remove("token");
+    Cookies.remove("user");
+    Cookies.remove("role"); // <--- NOVO
     setUser(null);
     setRole(null); // <--- NOVO
     router.push("/login");

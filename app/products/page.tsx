@@ -13,6 +13,7 @@ import {
     Eye,
     EyeOff
 } from "lucide-react";
+import Pagination from "@/components/Pagination"; // Importe a Paginação
 import { toast } from "sonner";
 
 interface Product {
@@ -32,12 +33,19 @@ export default function ProductList() {
     const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(true);
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
+
     // Permissão: Apenas Admin e Manager podem editar/excluir
     const canManage = role === "admin" || role === "manager";
 
     useEffect(() => {
         fetchProducts();
     }, []);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [search]);
 
     const fetchProducts = async () => {
         try {
@@ -91,6 +99,12 @@ export default function ProductList() {
     const filteredProducts = products.filter((p) =>
         p.name.toLowerCase().includes(search.toLowerCase()) ||
         (p.barcode && p.barcode.includes(search))
+    );
+
+    const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+    const currentItems = filteredProducts.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
     );
 
     return (
@@ -151,10 +165,10 @@ export default function ProductList() {
                         <tbody className="text-sm text-gray-700 divide-y divide-gray-100">
                             {loading ? (
                                 <tr><td colSpan={6} className="p-8 text-center text-gray-500">Carregando...</td></tr>
-                            ) : filteredProducts.length === 0 ? (
+                            ) : currentItems.length === 0 ? (
                                 <tr><td colSpan={6} className="p-8 text-center text-gray-500">Nenhum produto encontrado.</td></tr>
                             ) : (
-                                filteredProducts.map((product) => (
+                                currentItems.map((product) => (
                                     <tr key={product.id} className="hover:bg-gray-50 transition">
                                         <td className="p-4 text-gray-500">#{product.id}</td>
                                         <td className="p-4 font-medium text-gray-800">
@@ -213,6 +227,13 @@ export default function ProductList() {
                         </tbody>
                     </table>
                 </div>
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    totalItems={filteredProducts.length}
+                    itemsPerPage={itemsPerPage}
+                />
             </div>
         </div>
     );

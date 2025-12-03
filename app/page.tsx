@@ -16,6 +16,7 @@ import CashierManager from "@/components/CashierManager";
 import CheckoutModal from "@/components/CheckoutModal";
 import QuantityModal from "@/components/QuantityModal";
 import ChangeTerminalModal from "@/components/ChangeTerminalModal";
+import useScanDetection from "@/hooks/useScanDetection"; // <--- 1. Importe aqui
 import { toast } from "sonner";
 
 // Interfaces
@@ -167,6 +168,24 @@ export default function PDV() {
       }
     }
   };
+
+  const handleScan = (code: string) => {
+    // Tenta achar o produto pelo código de barras
+    const product = products.find(p => p.barcode === code);
+
+    if (product) {
+      // Se achou, abre o modal de quantidade (mesma lógica do clique/busca)
+      handleProductClick(product);
+      toast.success(`Produto identificado: ${product.name}`);
+    } else {
+      toast.warning(`Produto com código "${code}" não encontrado.`);
+    }
+  };
+
+  useScanDetection({
+    onScan: handleScan,
+    minLength: 3 // Mínimo de caracteres para considerar um código
+  });
 
   const filteredProducts = products.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||

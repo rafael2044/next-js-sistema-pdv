@@ -16,7 +16,8 @@ export default function CreateProduct() {
         category: "",
         price: "",
         cost_price: "",
-        stock_quantity: "",
+        stock_quantity: "1",
+        min_stock: "1",
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -24,17 +25,29 @@ export default function CreateProduct() {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            e.preventDefault(); // Bloqueia o submit
+
+            // Opcional: Se quiser que o Enter pule para o próximo campo (comportamento estilo Excel)
+            const formElement = e.currentTarget as HTMLFormElement;
+            const form = formElement.form;
+            const index = Array.prototype.indexOf.call(form, e.currentTarget);
+            form.elements[index + 1].focus();
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
         try {
-            // Convertendo strings para números conforme o Pydantic espera
             const payload = {
                 ...formData,
                 price: parseFloat(formData.price),
                 cost_price: parseFloat(formData.cost_price),
-                stock_quantity: parseFloat(formData.stock_quantity) || 0,
+                stock_quantity: parseFloat(formData.stock_quantity) || 1,
+                min_stock: parseFloat(formData.min_stock) || 1,
                 // Enviar null se barcode/category estiverem vazios
                 barcode: formData.barcode || null,
                 category: formData.category || null,
@@ -80,6 +93,7 @@ export default function CreateProduct() {
                                 placeholder="Ex: Coca-Cola 2L"
                                 value={formData.name}
                                 onChange={handleChange}
+                                onKeyDown={handleKeyDown}
                             />
                         </div>
 
@@ -93,6 +107,7 @@ export default function CreateProduct() {
                                 placeholder="Escaneie ou digite"
                                 value={formData.barcode}
                                 onChange={handleChange}
+                                onKeyDown={handleKeyDown}
                             />
                         </div>
 
@@ -107,6 +122,7 @@ export default function CreateProduct() {
                                 placeholder="Ex: Bebidas"
                                 value={formData.category}
                                 onChange={handleChange}
+                                onKeyDown={handleKeyDown}
                             />
                             {/* Datalist para sugestões simples */}
                             <datalist id="categories">
@@ -114,6 +130,12 @@ export default function CreateProduct() {
                                 <option value="Alimentos" />
                                 <option value="Limpeza" />
                                 <option value="Construção" />
+                                <option value="Eletrônicos" />
+                                <option value="Bebidas" />
+                                <option value="Alimentos" />
+                                <option value="Limpeza" />
+                                <option value="Construção" />
+                                <option value="Eletrônicos" />
                             </datalist>
                         </div>
 
@@ -123,12 +145,13 @@ export default function CreateProduct() {
                             <input
                                 type="number"
                                 name="price"
-                                step="0.01"
+                                step="0.5"
                                 required
                                 className="w-full p-2 border border-green-300 rounded focus:ring-green-500 focus:border-green-500 bg-green-50"
                                 placeholder="0.00"
                                 value={formData.price}
                                 onChange={handleChange}
+                                onKeyDown={handleKeyDown}
                             />
                         </div>
 
@@ -138,29 +161,50 @@ export default function CreateProduct() {
                             <input
                                 type="number"
                                 name="cost_price"
-                                step="0.01"
+                                step="0.5"
                                 required
                                 className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
                                 placeholder="0.00"
                                 value={formData.cost_price}
                                 onChange={handleChange}
+                                onKeyDown={handleKeyDown}
                             />
                         </div>
 
                         {/* Estoque Inicial */}
-                        <div className="md:col-span-2">
+                        <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Estoque Inicial</label>
                             <input
                                 type="number"
                                 name="stock_quantity"
-                                step="0.001"
+                                min="1"
+                                step="1"
                                 className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="0"
+                                placeholder="1"
                                 value={formData.stock_quantity}
                                 onChange={handleChange}
+                                onKeyDown={handleKeyDown}
+                            />
+                            <p className={(parseFloat(formData.stock_quantity) < parseFloat(formData.min_stock)) ? "text-xs text-red-500 mt-1 font-bold" : "text-xs text-gray-500 mt-1"}>
+                                Deve ser maior ou igual ao estoque mínimo.
+                            </p>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Estoque Mínimo</label>
+                            <input
+                                type="number"
+                                name="min_stock"
+                                min="1"
+                                step="1"
+                                className="w-full p-2 border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="1"
+                                value={formData.min_stock}
+                                onChange={handleChange}
+                                onKeyDown={handleKeyDown}
                             />
                             <p className="text-xs text-gray-500 mt-1">
-                                Deixe em branco ou 0 se não tiver estoque no momento.
+                                Deve ser maior que 1 unidade.
                             </p>
                         </div>
                     </div>
@@ -174,7 +218,7 @@ export default function CreateProduct() {
                         </Link>
                         <button
                             type="submit"
-                            disabled={loading}
+                            disabled={loading || parseFloat(formData.stock_quantity) < parseFloat(formData.min_stock)}
                             className="px-6 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-700 transition flex items-center gap-2"
                         >
                             <Save size={18} />

@@ -14,6 +14,8 @@ import {
     Search
 } from "lucide-react";
 import { toast } from "sonner";
+import Pagination from "@/components/Pagination"; // Importe a Paginação
+
 
 interface StockMovement {
     id: number;
@@ -37,6 +39,9 @@ export default function StockPage() {
     const [movements, setMovements] = useState<StockMovement[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
+
     // Filtros
     const [filterType, setFilterType] = useState("");
     const [startDate, setStartDate] = useState("");
@@ -55,6 +60,10 @@ export default function StockPage() {
         fetchProducts();
         fetchHistory();
     }, [role]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filterType, startDate, endDate]);
 
     // Busca lista de produtos para o Select
     const fetchProducts = async () => {
@@ -102,6 +111,12 @@ export default function StockPage() {
             setLoadingEntry(false);
         }
     };
+
+    const totalPages = Math.ceil(movements.length / itemsPerPage);
+    const currentItems = movements.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
     return (
         <div className="min-h-screen bg-gray-100 p-6">
@@ -215,10 +230,10 @@ export default function StockPage() {
                             </tr>
                         </thead>
                         <tbody className="text-sm text-gray-700 divide-y divide-gray-100">
-                            {movements.length === 0 ? (
+                            {currentItems.length === 0 ? (
                                 <tr><td colSpan={5} className="p-8 text-center text-gray-500">Nenhum registro encontrado no período.</td></tr>
                             ) : (
-                                movements.map((mov) => (
+                                currentItems.map((mov) => (
                                     <tr key={mov.id} className="hover:bg-gray-50">
                                         <td className="p-4 text-gray-500">
                                             {new Date(mov.timestamp).toLocaleString('pt-BR')}
@@ -251,6 +266,13 @@ export default function StockPage() {
                         </tbody>
                     </table>
                 </div>
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    totalItems={movements.length}
+                    itemsPerPage={itemsPerPage}
+                />
             </div>
         </div>
     );
