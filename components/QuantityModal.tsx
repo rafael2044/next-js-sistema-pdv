@@ -1,12 +1,13 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { X, Package, Plus } from "lucide-react";
+import { X, Package, Plus, Scale } from "lucide-react";
 
 interface Product {
     id: number;
     name: string;
     price: number;
     stock_quantity: number;
+    is_weighted: boolean;
 }
 
 interface QuantityModalProps {
@@ -22,7 +23,7 @@ export default function QuantityModal({ isOpen, onClose, onConfirm, product }: Q
 
     useEffect(() => {
         if (isOpen && product) {
-            setQuantity("1");
+            setQuantity(product?.is_weighted ? "0.00" : "1");
             setTimeout(() => {
                 if (inputRef.current) {
                     inputRef.current.focus();
@@ -83,21 +84,21 @@ export default function QuantityModal({ isOpen, onClose, onConfirm, product }: Q
                             {product.name}
                         </h3>
                         <div className="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-sm font-medium">
-                            Estoque Disponível: {product.stock_quantity}
+                            Estoque Disponível: {product.is_weighted ? product.stock_quantity.toFixed(2) : product.stock_quantity} {product.is_weighted && "kg"}
                         </div>
                     </div>
 
                     {/* Input de Quantidade */}
                     <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase text-center mb-2 tracking-wide">
-                            Quantidade
+                            {product.is_weighted ? (<><Scale size={20} /> Peso KG</>) : "Quantidade"}
                         </label>
                         <div className="relative max-w-[200px] mx-auto">
                             <input
                                 ref={inputRef}
                                 type="number"
-                                step="0.001"
-                                min="0.001"
+                                step={product.is_weighted ? "0.01" : "1"}
+                                min={product.is_weighted ? "0.01" : "1"}
                                 className="w-full p-3 text-center text-4xl font-extrabold text-gray-800 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition-all"
                                 value={quantity}
                                 onChange={(e) => setQuantity(e.target.value)}

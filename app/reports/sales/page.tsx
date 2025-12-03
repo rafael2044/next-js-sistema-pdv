@@ -29,7 +29,7 @@ interface Session {
 }
 
 interface SaleItem {
-    product: { name: string };
+    product: { name: string, is_weighted: boolean };
     quantity: number;
     unit_price: number;
     subtotal: number;
@@ -223,7 +223,7 @@ export default function SalesReport() {
                                                     {sale.items.map((item, idx) => (
                                                         <li key={idx} className="flex justify-between">
                                                             <span>
-                                                                {item.quantity}x {item.product ? item.product.name : ``}
+                                                                {item.quantity}{item.product?.is_weighted ? " kg " : ""}x {item.product ? item.product.name : ``}
                                                             </span>
                                                             <span className="font-medium text-gray-800">
                                                                 R$ {item.subtotal.toFixed(2)}

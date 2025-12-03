@@ -26,7 +26,8 @@ interface Product {
   price: number;
   stock_quantity: number;
   category: string;
-  barcode?: string; // <--- Adicionado
+  barcode?: string;
+  is_weighted: boolean;
 }
 
 interface CartItem extends Product {
@@ -367,7 +368,7 @@ export default function PDV() {
                     R$ {product.price.toFixed(2)}
                   </span>
                   <span className={`text-xs px-2 py-1 rounded font-medium ${product.stock_quantity > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                    Estoque: {product.stock_quantity}
+                    Estoque: {product.is_weighted ? product.stock_quantity.toFixed(2) : product.stock_quantity} {product.is_weighted && "kg"}
                   </span>
                 </div>
               </div>
@@ -393,7 +394,7 @@ export default function PDV() {
                 <div key={item.id} className="flex justify-between items-center bg-gray-50 p-3 rounded border border-gray-100">
                   <div className="flex-1">
                     <p className="font-medium text-gray-800">{item.name}</p>
-                    <p className="text-sm text-gray-500">{item.quantity}x R$ {item.price.toFixed(2)}</p>
+                    <p className="text-sm text-gray-500">{item.quantity}{item.is_weighted ? " kg " : ""}x R$ {item.price.toFixed(2)}</p>
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="font-bold text-gray-800">R$ {(item.price * item.quantity).toFixed(2)}</span>

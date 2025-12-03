@@ -5,6 +5,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import TerminalSetup from "@/components/TerminalSetup"; // Importe
 import ClientToast from "@/components/ClientToast";
+import RouteGuard from "@/components/RouteGuard";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,7 +22,9 @@ export default function RootLayout({
       <body className={inter.className}>
         <AuthProvider>
           <TerminalSetup />
-          {children}
+          <RouteGuard>
+            {children}
+          </RouteGuard>
           <ClientToast />
         </AuthProvider>
       </body>

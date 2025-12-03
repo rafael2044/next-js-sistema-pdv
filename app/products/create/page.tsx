@@ -2,7 +2,7 @@
 import { useState } from "react";
 import api from "@/services/api";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, Package } from "lucide-react";
+import { ArrowLeft, Save, Package, Scale } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -18,11 +18,17 @@ export default function CreateProduct() {
         cost_price: "",
         stock_quantity: "1",
         min_stock: "1",
+        is_weighted: false,
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        if (e.target.type === 'checkbox') {
+            const checked = (e.target as HTMLInputElement).checked;
+            setFormData((prev) => ({ ...prev, [name]: checked }));
+        } else {
+            setFormData((prev) => ({ ...prev, [name]: value }));
+        }
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -51,11 +57,24 @@ export default function CreateProduct() {
                 // Enviar null se barcode/category estiverem vazios
                 barcode: formData.barcode || null,
                 category: formData.category || null,
+                is_weighted: formData.is_weighted // <--- ENVIANDO AO BACKEND
+
             };
 
             await api.post("/products/", payload);
             toast.success("Produto cadastrado com sucesso!");
-            router.push("/"); // Volta para o PDV ou limpa o form
+
+            setFormData({
+                name: "",
+                barcode: "",
+                category: "",
+                price: "",
+                cost_price: "",
+                stock_quantity: "",
+                min_stock: "5",
+                is_weighted: false,
+            });
+
         } catch (error: any) {
             console.error(error);
             toast.error(error.response?.data?.detail || "Erro ao cadastrar produto");
@@ -137,6 +156,26 @@ export default function CreateProduct() {
                                 <option value="Construção" />
                                 <option value="Eletrônicos" />
                             </datalist>
+                        </div>
+
+                        <div className="md:col-span-2 bg-blue-50 p-4 rounded-lg border border-blue-100 flex items-center gap-4 transition-all hover:border-blue-300">
+                            <div className={`p-2 rounded-full transition-colors ${formData.is_weighted ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'}`}>
+                                <Scale size={24} />
+                            </div>
+                            <div className="flex-1 cursor-pointer" onClick={() => setFormData(prev => ({ ...prev, is_weighted: !prev.is_weighted }))}>
+                                <label className="block text-sm font-bold text-gray-800 cursor-pointer select-none">
+                                    Produto vendido por Peso (KG)?
+                                </label>
+                                <p className="text-xs text-gray-500 select-none">Se marcado, o preço será calculado por Quilograma e permitirá decimais.</p>
+                            </div>
+                            <input
+                                type="checkbox"
+                                id="is_weighted"
+                                name="is_weighted"
+                                checked={formData.is_weighted}
+                                onChange={handleChange}
+                                className="w-6 h-6 text-blue-600 rounded focus:ring-blue-500 border-gray-300 cursor-pointer"
+                            />
                         </div>
 
                         {/* Preço de Venda */}

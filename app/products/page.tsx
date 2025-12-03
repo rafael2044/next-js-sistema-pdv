@@ -25,6 +25,7 @@ interface Product {
     min_stock: number;
     category: string | null;
     is_active: boolean;
+    is_weighted: boolean;
 }
 
 export default function ProductList() {
@@ -183,12 +184,12 @@ export default function ProductList() {
                                         <td className="p-4 font-bold text-gray-800">R$ {product.price.toFixed(2)}</td>
                                         <td className="p-4">
                                             <span className={`px-2 py-1 rounded text-xs font-semibold ${product.stock_quantity > 0 ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'}`}>
-                                                {product.stock_quantity} un
+                                                {product.is_weighted ? product.stock_quantity.toFixed(2) : product.stock_quantity} {product.is_weighted ? "kg" : "un"}
                                             </span>
                                         </td>
                                         <td className="p-4">
                                             <span className={`px-2 py-1 rounded text-xs font-semibold`}>
-                                                {product.min_stock} un
+                                                {product.min_stock} {product.is_weighted ? "kg" : "un"}
                                             </span>
                                         </td>
                                         <td className="p-4">
