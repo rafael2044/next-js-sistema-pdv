@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 import CashierManager from "@/components/CashierManager";
 import CheckoutModal from "@/components/CheckoutModal";
 import QuantityModal from "@/components/QuantityModal";
@@ -57,9 +58,7 @@ export default function PDV() {
   const [showCheckout, setShowCheckout] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setTerminalName(localStorage.getItem("terminal_id") || "Indefinido");
-    }
+    setTerminalName(Cookies.get("terminal_id") || "Indefinido");
   }, []);
 
   useEffect(() => {
